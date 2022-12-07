@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:resources="clr-namespace:BluetoothButtonXF.Strings"
+             x:Class="BluetoothButtonXF.MainPage">
+
+    <Grid
+        x:Name="MainGrid">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Label
+            x:Name="MainGridHeader"
+            Text="{x:Static resources:Strings.ConnectTool_Header}"
+            HorizontalOptions="Center"
+            HorizontalTextAlignment="Center"
+            FontAttributes="Bold"
+            FontSize="25"
+            Margin="10"/>
+
+        <Frame
+            x:Name="PairedDeviceListFrame"
+            CornerRadius="10"
+            Padding="1">
+            
+            <CollectionView
+                x:Name="PairedDeviceList"
+                SelectionMode="Single"
+                SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+                Margin="10"
+                BackgroundColor="LightGray">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame
+                            BorderColor="LightGray"
+                            CornerRadius="10"
+                            Padding="3">
+                            <Grid
+                                Margin="5"
+                                BackgroundColor="{AppThemeBinding Dark=Black, Light=White}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="40"/>
+                                    <RowDefinition Height="40"/>
+                                </Grid.RowDefinitions>
+                                <Label Text="{Binding DeviceName}"
+                                       TextColor="{AppThemeBinding Dark=White,Light=Black}"
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       Grid.Row="0"/>
+                                <Label Text="{Binding DeviceMAC}"
+                                       TextColor="{AppThemeBinding Dark=White,Light=Black}"
+                                       FontSize="15"
+                                       Grid.Row="1"/>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Frame>
+        
+        <StackLayout
+            x:Name="BluetoothTypeSelector"
+            Orientation="Horizontal"
+            HorizontalOptions="Center"
+            VerticalOptions="Center"
+            Margin="10">
+            <RadioButton Value="{x:Static resources:Strings.BluetoothLowEnergy}" Content="{x:Static resources:Strings.BluetoothLowEnergy}"/>
+            <RadioButton Value="{x:Static resources:Strings.BluetoothClassic}" Content="{x:Static resources:Strings.BluetoothClassic}"/>
+        </StackLayout>
+
+        <Button
+            x:Name="ConnectButton"
+            Clicked="ConnectButton_Clicked"
+            BackgroundColor="Green"
+            TextColor="White"
+            HorizontalOptions="Center"
+            VerticalOptions="Center"
+            FontSize="16"
+            Margin="10"
+            WidthRequest="250"
+            Text="{x:Static resources:Strings.Connect}"/>
+
+    </Grid>
+
+</ContentPage>
