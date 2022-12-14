@@ -29,5 +29,25 @@ namespace BluetoothButtonXF
             InitializeComponent();
             BindingContext = this;
         }
+
+        private void DisconnectButton_Clicked(object sender, EventArgs e)
+        {
+            App.BluetoothClassicService.DisconnectDevice();
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                _ = await Navigation.PopAsync();
+            });
+        }
+
+        protected override bool OnBackButtonPressed()
+        {
+            App.BluetoothClassicService.DisconnectDevice();
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                _ = await Navigation.PopAsync();
+            });
+            return true;
+        }
+
     }
 }

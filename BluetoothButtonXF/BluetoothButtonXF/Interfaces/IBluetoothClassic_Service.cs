@@ -17,6 +17,8 @@ namespace BluetoothButtonXF.Interfaces
 
         List<BTDevice> GetPairedDevices();
 
+        void DisconnectDevice();
+
         void ClearDeviceConnections();
         void ConnectDevice(string identifier);
         Task<bool> WriteData(byte[] data);

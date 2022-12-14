@@ -56,10 +56,63 @@ namespace BluetoothButtonXF.Droid
             throw new NotImplementedException();
         }
 
+        public void DisconnectDevice()
+        {
+            try
+            {
+                _inputStream?.Close();
+                _inputStream?.Dispose();
+            }
+            catch(Exception e)
+            {
+
+            }
+            
+            try
+            {
+                _outputStream?.Close();
+                _outputStream?.Dispose();
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            try
+            {
+                _socket?.Close();
+                _socket?.Dispose();
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            try
+            {
+                _serverSocket?.Close();
+                _serverSocket?.Dispose();
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            try
+            {
+                _device?.Dispose();
+            }
+            catch (Exception e)
+            {
+
+            }
+        }
+
         public void ConnectDevice(string identifier)
         {
             BluetoothAdapter adapter = BluetoothAdapter.DefaultAdapter;
             _device = adapter.GetRemoteDevice(identifier);
+            if (_device == null) return;
             try
             {
                 _socket = _device.CreateRfcommSocketToServiceRecord(_UUID);
@@ -158,6 +211,7 @@ namespace BluetoothButtonXF.Droid
                 try
                 {
                     _socket = _serverSocket?.Accept();
+                    System.Diagnostics.Debug.WriteLine("accepted a connection!");
                 }
                 catch(System.Exception btException)
                 {

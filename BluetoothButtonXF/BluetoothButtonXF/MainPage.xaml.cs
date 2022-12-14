@@ -40,9 +40,12 @@ namespace BluetoothButtonXF
             PairedDeviceList.ItemsSource = App.BluetoothClassicService.GetPairedDevices();
         }
 
-        private async void GoToConnectedPage(EventArgs args)
+        private void GoToConnectedPage(EventArgs args)
         {
-            await Navigation.PushAsync(new ButtonPage());
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                await Navigation.PushAsync(new ButtonPage());
+            });
         }
 
         protected override void OnSizeAllocated(double width, double height)
@@ -138,7 +141,9 @@ namespace BluetoothButtonXF
         {
             if(_selectedDevice != null)
             {
-                App.BluetoothClassicService.ConnectDevice(_selectedDevice.DeviceMAC);
+                Task.Run(() => {
+                    App.BluetoothClassicService.ConnectDevice(_selectedDevice.DeviceMAC);
+                });
             }
         }
         

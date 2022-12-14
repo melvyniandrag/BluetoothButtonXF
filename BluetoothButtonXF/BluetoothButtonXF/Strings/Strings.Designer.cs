@@ -97,7 +97,7 @@ namespace BluetoothButtonXF.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Disconnect.
+        ///   Looks up a localized string similar to DisconnectDevice.
         /// </summary>
         internal static string Disconnect_ButtonText {
             get {
