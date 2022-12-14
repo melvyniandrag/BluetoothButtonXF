@@ -11,6 +11,8 @@ namespace BluetoothButtonXF
 {
     public partial class MainPage : ContentPage
     {
+        private bool BluetoothPermissionGranted = false;
+
         private double _width;
         private double _height;
 
@@ -28,16 +30,22 @@ namespace BluetoothButtonXF
         {
             InitializeComponent();
 
-            MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_PERMISSION_IS_GRANTED, ListDevices);
+            MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_PERMISSION_IS_GRANTED, StartBluetoothActivities);
             MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_CONNECTION_SUCCESSFUL, GoToConnectedPage);
             App.BluetoothClassicService.ConfigureService();
-            Task.Run(() => App.BluetoothClassicService.ListenForConnection());
             BindingContext = this;
         }
 
-        private void ListDevices(EventArgs args)
+        private void StartBluetoothActivities(EventArgs args)
         {
-            PairedDeviceList.ItemsSource = App.BluetoothClassicService.GetPairedDevices();
+            BluetoothPermissionGranted = true;
+            PairedDeviceList.ItemsSource = App.BluetoothClassicService.GetPairedDevices(); // list connectable devices
+            Task.Run(() => App.BluetoothClassicService.ListenForConnection());             // and listen for incoming connections
+        }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
         }
 
         private void GoToConnectedPage(EventArgs args)

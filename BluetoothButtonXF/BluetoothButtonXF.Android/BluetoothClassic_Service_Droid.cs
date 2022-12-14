@@ -11,6 +11,7 @@ using BluetoothButtonXF.Interfaces;
 using BluetoothButtonXF.Util;
 using Java.IO;
 using Java.Util;
+using Javax.Security.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Xamarin.Forms;
+using static AndroidX.RecyclerView.Widget.RecyclerView;
 
 [assembly: Xamarin.Forms.Dependency(typeof(BluetoothButtonXF.Droid.BluetoothClassic_Service_Droid))]
 namespace BluetoothButtonXF.Droid
@@ -34,6 +36,11 @@ namespace BluetoothButtonXF.Droid
         private System.IO.Stream _outputStream;
         private BluetoothServerSocket _serverSocket = null;
 
+        private int _lastHeartbeat = 0;
+        private bool _receivedHeartbeat = false;
+
+        private const int _HEARTBEAT_TIMER = 5;
+
         private enum BLUETOOTH_STATE
         {
             STATE_NONE,
@@ -46,8 +53,8 @@ namespace BluetoothButtonXF.Droid
 
         public static int BLUETOOTH_PERMISSION_CODE = 100;
 
-        public event EventHandler OnServicesDiscovered;
-        public event EventHandler OnNotificationReceived;
+        public event EventHandler OnButtonPushReceived;
+        public event EventHandler OnHeartbeatReceived;
         public event EventHandler OnDeviceDisconnected;
         public event EventHandler OnConnectionFailed;
 
@@ -61,7 +68,7 @@ namespace BluetoothButtonXF.Droid
             try
             {
                 _inputStream?.Close();
-                _inputStream?.Dispose();
+                _inputStream = null;
             }
             catch(Exception e)
             {
@@ -71,7 +78,7 @@ namespace BluetoothButtonXF.Droid
             try
             {
                 _outputStream?.Close();
-                _outputStream?.Dispose();
+                _outputStream = null;
             }
             catch (Exception e)
             {
@@ -81,7 +88,7 @@ namespace BluetoothButtonXF.Droid
             try
             {
                 _socket?.Close();
-                _socket?.Dispose();
+                _socket = null;
             }
             catch (Exception e)
             {
@@ -91,7 +98,7 @@ namespace BluetoothButtonXF.Droid
             try
             {
                 _serverSocket?.Close();
-                _serverSocket?.Dispose();
+                _serverSocket = null;
             }
             catch (Exception e)
             {
@@ -100,12 +107,13 @@ namespace BluetoothButtonXF.Droid
 
             try
             {
-                _device?.Dispose();
+                _device = null;
             }
             catch (Exception e)
             {
 
             }
+            _state = BLUETOOTH_STATE.STATE_NONE;
         }
 
         public void ConnectDevice(string identifier)
@@ -133,7 +141,6 @@ namespace BluetoothButtonXF.Droid
             }
             try
             {
-                //StopScan();
                 _socket.Connect();
             }
             catch (Exception ex)
@@ -161,11 +168,24 @@ namespace BluetoothButtonXF.Droid
             {
                 System.Diagnostics.Debug.WriteLine("Error setting up streams");
                 System.Diagnostics.Debug.WriteLine(ex.ToString());
-                OnConnectionFailed(this, new EventArgs());
+                //OnConnectionFailed(this, new EventArgs());
                 return;
             }
-            //Task.Run(() => ReceiveBTClassicMessageLoop());
-            //OnServicesDiscovered(this, new ServicesDiscoveredArgs(device?.Name, device?.Address));
+            try
+            {
+                _serverSocket?.Close();
+                _serverSocket = null;
+            }
+            catch (Exception e)
+            {
+
+            }
+            _state = BLUETOOTH_STATE.STATE_CONNECTED;
+            TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
+            int secondsSinceEpoch = (int)t.TotalSeconds;
+            _lastHeartbeat = secondsSinceEpoch;
+            Task.Run(() => ReceiveDataLoop());
+            Task.Run(() => HeartbeatLoop());
             MessagingCenter.Send(EventArgs.Empty, App.BLUETOOTH_CONNECTION_SUCCESSFUL);
         }
 
@@ -191,43 +211,139 @@ namespace BluetoothButtonXF.Droid
         }
 
         [Obsolete]
-        public void ListenForConnection()
+        public async void ListenForConnection()
+        {
+            _state = BLUETOOTH_STATE.STATE_LISTEN;
+            while (true)
+            {
+                if (_state != BLUETOOTH_STATE.STATE_CONNECTED)
+                {
+                    try
+                    {
+                        BluetoothAdapter adapter = BluetoothAdapter.DefaultAdapter;
+                        _serverSocket = adapter.ListenUsingRfcommWithServiceRecord(_NAME, _UUID);
+                        _socket = _serverSocket?.Accept();
+                    }
+                    catch (System.Exception btException)
+                    {
+                        _state = BLUETOOTH_STATE.STATE_LISTEN;
+                        System.Diagnostics.Debug.WriteLine("[BluetoothClassicService_Droid]::ListenForConnection() \n" + btException.Message);
+                        continue;
+                    }
+                    _state = BLUETOOTH_STATE.STATE_CONNECTED;
+                    _inputStream = _socket.InputStream;
+                    _outputStream = _socket.OutputStream;
+                    TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
+                    int secondsSinceEpoch = (int)t.TotalSeconds;
+                    _lastHeartbeat = secondsSinceEpoch;
+                    Task.Run(() => ReceiveDataLoop());
+                    Task.Run(() => HeartbeatLoop());
+                    MessagingCenter.Send(EventArgs.Empty, App.BLUETOOTH_CONNECTION_SUCCESSFUL);
+                }
+                await Task.Delay(1000);
+            }
+        }
+        
+        private async void HeartbeatLoop()
+        {
+            while (true)
+            {
+                TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
+                int secondsSinceEpoch = (int)t.TotalSeconds;
+                if (_receivedHeartbeat)
+                {
+                    _lastHeartbeat = secondsSinceEpoch;
+                    _receivedHeartbeat = false;
+                    await Task.Delay(1000);
+                }
+                else if((secondsSinceEpoch - _lastHeartbeat) > _HEARTBEAT_TIMER)
+                {
+                    DisconnectDevice(); // this should cause everything else to stop working.
+                    break;
+                }
+                else
+                {
+                    // We didnt get a heartbeat and the timer didnt run out. Lets keep waiting.
+                    await Task.Delay(1000);
+                }
+                
+            }
+        }
+        
+        public void WriteData(byte[] data)
         {
             try
             {
-                BluetoothAdapter adapter = BluetoothAdapter.DefaultAdapter;
-                _serverSocket = adapter.ListenUsingRfcommWithServiceRecord(_NAME, _UUID);
+                _outputStream.Write(data);
             }
-            catch(System.Exception btException)
+            catch(Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(btException.Message);
-                _state =  BLUETOOTH_STATE.STATE_NONE;
-                return;
-            }
-            _state = BLUETOOTH_STATE.STATE_LISTEN;
 
-            while(_state != BLUETOOTH_STATE.STATE_CONNECTED)
-            {
-                try
-                {
-                    _socket = _serverSocket?.Accept();
-                    System.Diagnostics.Debug.WriteLine("accepted a connection!");
-                }
-                catch(System.Exception btException)
-                {
-                    break;
-                }
-
-
-                _state = BLUETOOTH_STATE.STATE_CONNECTED;
-                _inputStream = _socket.InputStream;
-                _outputStream = _socket.OutputStream;
             }
         }
 
-        public Task<bool> WriteData(byte[] data)
+        private const int MESSAGE_SIZE = 1;
+        
+        private async void ReceiveDataLoop()
         {
-            throw new NotImplementedException(); 
+            byte[] receivedBytes = new byte[MESSAGE_SIZE];
+            while (true)
+            {
+                try
+                {
+                    bool success = await readStream(_inputStream, 1, receivedBytes);
+                    if (!success)
+                    {
+                        DisconnectDevice();
+                        MessagingCenter.Send(EventArgs.Empty, App.BLUETOOTH_CONNECTION_LOST);
+                        break;
+                    }
+                    if (receivedBytes[0] == 0x00)
+                    {
+                        OnHeartbeatReceived(null, null);
+                    }
+                    else if(receivedBytes[0] == 0x01)
+                    {
+                        OnButtonPushReceived(null, null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("[BluetoothClassicService_Droid::ReceiveDataLoop()]: \n" + ex.Message);
+                    return;
+                }
+            }
+        }
+
+        private async Task<bool> readStream(System.IO.Stream s, int count, byte[] dest)
+        {
+            if (s == null)
+            {
+                return false;
+            }
+            try
+            {
+                int offset = 0;
+                int numRead = 0;
+                if (count == 0)
+                {
+                    return true;
+                }
+                do
+                {
+                    numRead = await s.ReadAsync(dest, offset, count);
+                    System.Diagnostics.Debug.WriteLine("Read " + numRead + " bytes int array offset " + offset + ". Expecting to read " + count + "bytes in total.");
+                    offset += numRead;
+                    count -= numRead;
+                } while (count > 0);
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine("Error reading stream");
+                System.Diagnostics.Debug.WriteLine(e.Message);
+                return false;
+            }
+            return true;
         }
 
         public void ConfigureService()

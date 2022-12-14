@@ -27,6 +27,8 @@ namespace BluetoothButtonXF
         public ButtonPage()
         {
             InitializeComponent();
+
+            MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_CONNECTION_LOST, PopPage);
             BindingContext = this;
         }
 
@@ -47,6 +49,14 @@ namespace BluetoothButtonXF
                 _ = await Navigation.PopAsync();
             });
             return true;
+        }
+
+        private void PopPage(EventArgs e)
+        {
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                _ = await Navigation.PopAsync();
+            });
         }
 
     }

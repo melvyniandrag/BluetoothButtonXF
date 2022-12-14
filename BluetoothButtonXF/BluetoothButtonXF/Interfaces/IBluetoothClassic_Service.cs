@@ -8,8 +8,8 @@ namespace BluetoothButtonXF.Interfaces
 {
     public interface IBluetoothClassic_Service
     {
-        event EventHandler OnServicesDiscovered;
-        event EventHandler OnNotificationReceived;
+        event EventHandler OnButtonPushReceived;
+        event EventHandler OnHeartbeatReceived;
         event EventHandler OnDeviceDisconnected;
         event EventHandler OnConnectionFailed;
 
@@ -21,7 +21,7 @@ namespace BluetoothButtonXF.Interfaces
 
         void ClearDeviceConnections();
         void ConnectDevice(string identifier);
-        Task<bool> WriteData(byte[] data);
+        void WriteData(byte[] data);
 
         void ListenForConnection();
 

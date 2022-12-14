@@ -10,7 +10,7 @@ namespace BluetoothButtonXF
         public static IBluetoothClassic_Service BluetoothClassicService;
         public const string BLUETOOTH_PERMISSION_IS_GRANTED = "User has granted bluetooth permission";
         public const string BLUETOOTH_CONNECTION_SUCCESSFUL = "Bluetooth Connection Successful";
-
+        public const string BLUETOOTH_CONNECTION_LOST = "Bluetooth Connection Lost";
         public App()
         {
             InitializeComponent();
