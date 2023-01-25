@@ -238,7 +238,7 @@ namespace BluetoothButtonXF.Droid
                     _lastHeartbeat = secondsSinceEpoch;
                     Task.Run(() => ReceiveDataLoop());
                     Task.Run(() => HeartbeatLoop());
-                    MessagingCenter.Send(EventArgs.Empty, App.BLUETOOTH_CONNECTION_SUCCESSFUL);
+                    MessagingCenter.Send(EventArgs.Empty, App.BLUETOOTH_CONNECTION_FROM_REMOTE_DEVICE_SUCCESSFUL);
                 }
                 await Task.Delay(1000);
             }
@@ -254,6 +254,7 @@ namespace BluetoothButtonXF.Droid
                 {
                     _lastHeartbeat = secondsSinceEpoch;
                     _receivedHeartbeat = false;
+                    SendHeartBeat();
                     await Task.Delay(1000);
                 }
                 else if((secondsSinceEpoch - _lastHeartbeat) > _HEARTBEAT_TIMER)
@@ -278,7 +279,7 @@ namespace BluetoothButtonXF.Droid
             }
             catch(Exception ex)
             {
-
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
 
@@ -300,11 +301,11 @@ namespace BluetoothButtonXF.Droid
                     }
                     if (receivedBytes[0] == 0x00)
                     {
-                        OnHeartbeatReceived(null, null);
+                        _receivedHeartbeat = true;
                     }
                     else if(receivedBytes[0] == 0x01)
                     {
-                        OnButtonPushReceived(null, null);
+                        MessagingCenter.Send(EventArgs.Empty, App.REMOTE_BUTTON_PRESS_RECEIVED);
                     }
                 }
                 catch (Exception ex)
@@ -368,6 +369,18 @@ namespace BluetoothButtonXF.Droid
                 };
                 ActivityCompat.RequestPermissions(Platform.CurrentActivity, BELOW_ANDROID_12_BLUETOOTH_PERMISSIONS, BLUETOOTH_PERMISSION_CODE);
             }
+        }
+
+        public void SendButtonPressEvent()
+        {
+            byte[] data = { 0x01 };
+            WriteData(data);
+        }
+
+        public void SendHeartBeat()
+        {
+            byte[] data = { 0x00 };
+            WriteData(data);
         }
     }
 }

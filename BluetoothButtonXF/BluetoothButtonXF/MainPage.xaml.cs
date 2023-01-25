@@ -32,6 +32,7 @@ namespace BluetoothButtonXF
 
             MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_PERMISSION_IS_GRANTED, StartBluetoothActivities);
             MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_CONNECTION_SUCCESSFUL, GoToConnectedPage);
+            MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_CONNECTION_FROM_REMOTE_DEVICE_SUCCESSFUL, GoToConnectedPageForListener);
             App.BluetoothClassicService.ConfigureService();
             BindingContext = this;
         }
@@ -53,6 +54,14 @@ namespace BluetoothButtonXF
             Device.BeginInvokeOnMainThread(async () =>
             {
                 await Navigation.PushAsync(new ButtonPage());
+            });
+        }
+
+        private void GoToConnectedPageForListener(EventArgs args)
+        {
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                await Navigation.PushAsync(new ButtonPage(ButtonPage.ButtonStatus.PRESSED));
             });
         }
 

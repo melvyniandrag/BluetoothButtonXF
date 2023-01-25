@@ -17,11 +17,12 @@
                 x:Name="GameButton"
                 Grid.Row="1"
                 BackgroundColor="{Binding ButtonStatusColor}"
-                VerticalOptions="Fill"
+                VerticalOptions="Center"
                 HorizontalOptions="Center"
-                WidthRequest="200"
-                HeightRequest="200"
-                CornerRadius="100"/>
+                WidthRequest="{Binding ButtonWidth}"
+                HeightRequest="{Binding ButtonHeight}"
+                CornerRadius="{Binding ButtonCornerRadius}"
+                Clicked="GameButton_Clicked"/>
 
 
             <Button

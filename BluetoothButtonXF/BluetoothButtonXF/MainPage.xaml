@@ -37,8 +37,7 @@
                 x:Name="PairedDeviceList"
                 SelectionMode="Single"
                 SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
-                Margin="10"
-                BackgroundColor="LightGray">
+                Margin="10">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Frame
@@ -46,19 +45,16 @@
                             CornerRadius="10"
                             Padding="3">
                             <Grid
-                                Margin="5"
-                                BackgroundColor="{AppThemeBinding Dark=Black, Light=White}">
+                                Margin="5">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="40"/>
                                     <RowDefinition Height="40"/>
                                 </Grid.RowDefinitions>
                                 <Label Text="{Binding DeviceName}"
-                                       TextColor="{AppThemeBinding Dark=White,Light=Black}"
                                        FontSize="20"
                                        FontAttributes="Bold"
                                        Grid.Row="0"/>
                                 <Label Text="{Binding DeviceMAC}"
-                                       TextColor="{AppThemeBinding Dark=White,Light=Black}"
                                        FontSize="15"
                                        Grid.Row="1"/>
                             </Grid>

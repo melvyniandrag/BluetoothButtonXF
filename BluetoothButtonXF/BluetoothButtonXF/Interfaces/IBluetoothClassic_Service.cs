@@ -26,5 +26,9 @@ namespace BluetoothButtonXF.Interfaces
         void ListenForConnection();
 
         void ConfigureService();
+
+        void SendButtonPressEvent();
+
+        void SendHeartBeat();
     }
 }
