@@ -13,12 +13,16 @@ namespace BluetoothButtonXF
         public const string BLUETOOTH_CONNECTION_FROM_REMOTE_DEVICE_SUCCESSFUL = "Bluetooth Connection Started By Remote Device";
         public const string BLUETOOTH_CONNECTION_LOST = "Bluetooth Connection Lost";
         public const string REMOTE_BUTTON_PRESS_RECEIVED = "The player on the remote phone clicked the button";
+        public const string THEME_CHANGED = "Theme changed";
         public App()
         {
             InitializeComponent();
             BluetoothClassicService = DependencyService.Get<IBluetoothClassic_Service>();
-
             MainPage = new NavigationPage( new MainPage() );
+            Application.Current.RequestedThemeChanged += (s, a) =>
+            {
+                MessagingCenter.Send(EventArgs.Empty, THEME_CHANGED);
+            };
         }
 
         protected override void OnStart()

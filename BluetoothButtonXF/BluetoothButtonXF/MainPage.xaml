@@ -22,6 +22,8 @@
         <Label
             x:Name="MainGridHeader"
             Text="{x:Static resources:Strings.ConnectTool_Header}"
+            VerticalOptions="CenterAndExpand"
+            VerticalTextAlignment="Center"
             HorizontalOptions="Center"
             HorizontalTextAlignment="Center"
             FontAttributes="Bold"
@@ -30,35 +32,47 @@
 
         <Frame
             x:Name="PairedDeviceListFrame"
-            CornerRadius="10"
-            Padding="1">
+            BorderColor="{AppThemeBinding Dark=White, Light=Black}"
+            CornerRadius="15"
+            Padding="10,10,10,10"
+            Margin="15">
             
             <CollectionView
                 x:Name="PairedDeviceList"
                 SelectionMode="Single"
                 SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
-                Margin="10">
+                BackgroundColor="{AppThemeBinding Dark=Black, Light=White}"
+                SelectionChanged="SelectedDevice_Changed"
+                Margin="2">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame
+                        <Grid
+                            Margin="5">
+                            <Frame
+                            Margin="5,10,5,10"
+                            BackgroundColor="{Binding BackgroundColor}"
                             BorderColor="LightGray"
                             CornerRadius="10"
-                            Padding="3">
-                            <Grid
+                            Padding="1">
+                                <Grid
+                                Padding="4"
                                 Margin="5">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="40"/>
-                                    <RowDefinition Height="40"/>
-                                </Grid.RowDefinitions>
-                                <Label Text="{Binding DeviceName}"
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="40"/>
+                                        <RowDefinition Height="40"/>
+                                    </Grid.RowDefinitions>
+                                    <Label Text="{Binding DeviceName}"
+                                       TextColor="{Binding TextColor}"
                                        FontSize="20"
                                        FontAttributes="Bold"
                                        Grid.Row="0"/>
-                                <Label Text="{Binding DeviceMAC}"
+                                    <Label Text="{Binding DeviceMAC}"
+                                       TextColor="{Binding TextColor}"
                                        FontSize="15"
                                        Grid.Row="1"/>
-                            </Grid>
-                        </Frame>
+                                </Grid>
+                            </Frame>
+                        </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

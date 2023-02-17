@@ -28,11 +28,14 @@ namespace BluetoothButtonXF
 
         public MainPage()
         {
+            NavigationPage.SetHasNavigationBar(this, false);
             InitializeComponent();
 
             MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_PERMISSION_IS_GRANTED, StartBluetoothActivities);
             MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_CONNECTION_SUCCESSFUL, GoToConnectedPage);
             MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_CONNECTION_FROM_REMOTE_DEVICE_SUCCESSFUL, GoToConnectedPageForListener);
+            MessagingCenter.Subscribe<EventArgs>(this, App.BLUETOOTH_CONNECTION_FROM_REMOTE_DEVICE_SUCCESSFUL, GoToConnectedPageForListener);
+            MessagingCenter.Subscribe<EventArgs>(this, App.THEME_CHANGED, updateColors);
             App.BluetoothClassicService.ConfigureService();
             BindingContext = this;
         }
@@ -41,8 +44,11 @@ namespace BluetoothButtonXF
         {
             BluetoothPermissionGranted = true;
             PairedDeviceList.ItemsSource = App.BluetoothClassicService.GetPairedDevices(); // list connectable devices
+            updateColorsForDeviceList();
             Task.Run(() => App.BluetoothClassicService.ListenForConnection());             // and listen for incoming connections
         }
+
+
 
         protected override void OnAppearing()
         {
@@ -163,6 +169,72 @@ namespace BluetoothButtonXF
                 });
             }
         }
-        
+
+        public void SelectedDevice_Changed(object sender, SelectionChangedEventArgs args)
+        {
+            var selection = args.CurrentSelection;
+            if ((selection == null) || (selection.Count == 0))
+            {
+                return;
+            }
+            else
+            {
+                foreach(BTDevice device in PairedDeviceList.ItemsSource)
+                {
+                    if(device == (BTDevice)selection[0])
+                    {
+                        device.IsSelected = true;
+                    }
+                    else
+                    {
+                        device.IsSelected = false;
+                    }
+                    device.OnPropertyChanged();
+                }
+                updateColorsForDeviceList();
+            }
+        }
+
+        private void updateColors( EventArgs args)
+        {
+            updateColorsForDeviceList();
+        }
+
+        private void updateColorsForDeviceList()
+        {
+            OSAppTheme theme = Application.Current.RequestedTheme;
+
+            foreach (BTDevice device in PairedDeviceList.ItemsSource)
+            {
+                if (device.IsSelected)
+                {
+                    if (theme == OSAppTheme.Dark)
+                    {
+                        device.TextColor = LayoutConstants.LIST_SELECTED_TEXT_DARK;
+                        device.BackgroundColor = LayoutConstants.LIST_SELECTED_BG_DARK;
+                    }
+                    else
+                    {
+                        device.TextColor = LayoutConstants.LIST_SELECTED_TEXT_LIGHT;
+                        device.BackgroundColor = LayoutConstants.LIST_SELECTED_BG_LIGHT;
+                    }
+                }
+                else
+                {
+                    if (theme == OSAppTheme.Dark)
+                    {
+                        device.TextColor = LayoutConstants.LIST_UNSELECTED_TEXT_DARK;
+                        device.BackgroundColor = LayoutConstants.LIST_UNSELECTED_BG_DARK;
+                    }
+                    else
+                    {
+                        device.TextColor = LayoutConstants.LIST_UNSELECTED_TEXT_LIGHT;
+                        device.BackgroundColor = LayoutConstants.LIST_UNSELECTED_BG_LIGHT;
+                    }
+                }
+                device.OnPropertyChanged();
+            }
+        }
+
     }
 }
